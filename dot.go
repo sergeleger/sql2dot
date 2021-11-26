@@ -87,16 +87,19 @@ var tableTemplate = `
 	{{- range $i, $d := .Table.Columns }}
 	<tr>
 		<td align="left"
-			{{if not $.FK }} port="{{$i}}"
-			{{else}} port="e{{$i}}"
-			{{end}}>
+			{{- if not $.FK }} port="{{$i}}"
+			{{- else}} port="e{{$i}}"
+			{{- end}}>
 			{{$d.Name}}</td>
 
 		<td align="left">
+			{{if $d.Type}}
 			<font point-size="10">{{$d.Type}}</font>
+			{{end}}
 		</td>
+
 		{{ if $.FK }}
-			<td align="right" port="s{{$i}}"><font point-size="10">{{ fk $.Table $d}}</font></td>
+			<td align="left" port="s{{$i}}"><font point-size="10">{{ fk $.Table $d}}</font></td>
 		{{end}}
 	</tr>
 	{{- end}}
