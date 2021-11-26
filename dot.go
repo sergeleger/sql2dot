@@ -13,7 +13,9 @@ func graph(w io.Writer, tables Tables, includeFK bool) error {
 	defer bw.Flush()
 
 	bw.WriteString("digraph g {\n")
-	bw.WriteString("node [shape=plain,style=rounded,height=0.1];\n")
+	bw.WriteString("rankdir=LR;\n")
+	bw.WriteString("edge [ arrowsize=0.5, arrowtail=empty, arrowhead=empty ];\n")
+	bw.WriteString("node [ shape=plain, height=0.1 ];\n")
 	bw.WriteString(`fontsize="102pt	"` + "\n")
 
 	tmpl := template.New("")
