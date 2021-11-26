@@ -66,11 +66,8 @@ func graph(w io.Writer, tables Tables, includeFK bool) error {
 			destNode := fmt.Sprintf("table%d", tableIndex)
 			destIndex, _ := destTable.Column(r.ToColumn)
 
-			if includeFK {
-				fmt.Fprintf(bw, "%s:s%d -> %s:e%d;\n", sourceName, srcIndex, destNode, destIndex)
-			} else {
-				fmt.Fprintf(bw, "%s:%d -> %s:%d;\n", sourceName, srcIndex, destNode, destIndex)
-			}
+			fmt.Fprintf(bw, "%s:s%d -> %s:e%d;\n", sourceName, srcIndex, destNode, destIndex)
+
 		}
 	}
 
@@ -88,13 +85,11 @@ var tableTemplate = `
 	<HR/>
 	{{- range $i, $d := .Table.Columns }}
 	<tr>
-		<td align="left"
-			{{- if not $.FK }} port="{{$i}}"
-			{{- else}} port="e{{$i}}"
-			{{- end}}>
-			{{$d.Name}}</td>
+		<td align="left" port="e{{$i}}">
+			{{$d.Name}}
+		</td>
 
-		<td align="left">
+		<td align="left" {{- if not $.FK }} port="s{{$i}}" {{- end}}>
 			{{if $d.Type}}
 			<font point-size="10">{{$d.Type}}</font>
 			{{end}}
