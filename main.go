@@ -33,6 +33,7 @@ func run(args []string) error {
 	truncateDot := flag.Int("truncate", -1, "In Graphviz output, truncate large tables to `n` columns.")
 	mdOutput := flag.Bool("md", false, "Output using Markdown.")
 	htmlOutput := flag.Bool("html", false, "Output using HTML.")
+	d2Output := flag.Bool("d2", false, "Output using D2.")
 	templateFile := flag.String("template", "", "Alternative Go template file.")
 	section := flag.Int("section", 1, "Generate <h`N` /> elements (or equivalent Markdown)")
 
@@ -113,6 +114,9 @@ func run(args []string) error {
 
 	case *htmlOutput:
 		return html(os.Stdout, tables, *section)
+
+	case *d2Output:
+		return d2(os.Stdout, tables)
 
 	default:
 		return graph(os.Stdout, tables, *includeFK, *truncateDot)

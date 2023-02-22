@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -21,7 +21,7 @@ type StringArrayFromFile struct {
 }
 
 func (s *StringArrayFromFile) Set(t string) error {
-	buf, err := ioutil.ReadFile(t)
+	buf, err := os.ReadFile(t)
 	if err != nil {
 		return err
 	}

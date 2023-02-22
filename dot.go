@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
+	"os"
 
 	"golang.org/x/exp/slices"
 )
@@ -37,7 +37,7 @@ func newTemplate(source string) (*template.Template, error) {
 }
 
 func newTemplateFromFile(filename string) (*template.Template, error) {
-	buf, err := ioutil.ReadFile(filename)
+	buf, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
