@@ -17,9 +17,9 @@ type sqliteColumn struct {
 	ID         int64       `db:"cid"`
 	Name       string      `db:"name"`
 	Type       string      `db:"type"`
-	NotNull    bool        `db:"notnull"`
+	NotNull    int         `db:"notnull"`
 	Default    interface{} `db:"dflt_value"`
-	PrimaryKey bool        `db:"pk"`
+	PrimaryKey int         `db:"pk"`
 }
 
 type sqliteForeignKey struct {
@@ -37,19 +37,19 @@ func parseSqlite(db *sqlx.DB) (Tables, error) {
 	var sqliteTables []sqliteTable
 	err := db.Select(&sqliteTables, `select type, name from sqlite_master where type != "index"`)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error: getting list of tables: %w", err)
 	}
 
 	// Capture columns and Foreign Keys
 	for i, t := range sqliteTables {
 		err := db.Select(&sqliteTables[i].Columns, fmt.Sprintf(`PRAGMA table_info(%q)`, t.Name))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error: getting list of columns for %s: %w", t.Name, err)
 		}
 
 		err = db.Select(&sqliteTables[i].References, fmt.Sprintf(`PRAGMA foreign_key_list(%q)`, t.Name))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error: getting list of foreign keys for %s: %w", t.Name, err)
 		}
 	}
 
@@ -62,9 +62,9 @@ func parseSqlite(db *sqlx.DB) (Tables, error) {
 			table.Columns = append(table.Columns, Column{
 				Name:       c.Name,
 				Type:       c.Type,
-				NotNull:    c.NotNull,
+				NotNull:    c.NotNull == 1,
 				Default:    c.Default,
-				PrimaryKey: c.PrimaryKey,
+				PrimaryKey: c.PrimaryKey == 1,
 			})
 		}
 
