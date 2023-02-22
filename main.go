@@ -4,10 +4,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"strings"
 
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -24,9 +26,15 @@ func run(args []string) error {
 	var exclude = StringArrayFromFile{}
 	var include = StringArrayFromFile{}
 	var flag = flag.NewFlagSet(args[0], flag.ExitOnError)
-	sqlite := flag.Bool("sqlite", false, "Access a Sqlite database.")
+	sqlite := flag.Bool("sqlite", false, "Access a SQLite database.")
+	postgres := flag.Bool("postgres", false, "Access a PostgreSQL database defined by PGDATABASE_URL environment variable")
 	listTables := flag.Bool("list", false, "List table names to standard output.")
 	includeFK := flag.Bool("fk", false, "Add FK information to table output.")
+	truncateDot := flag.Int("truncate", -1, "In Graphviz output, truncate large tables to `n` columns.")
+	mdOutput := flag.Bool("md", false, "Output using Markdown.")
+	htmlOutput := flag.Bool("html", false, "Output using HTML.")
+	templateFile := flag.String("template", "", "Alternative Go template file.")
+	section := flag.Int("section", 1, "Generate <h`N` /> elements (or equivalent Markdown)")
 
 	flag.Var(&exclude, "exclude-file", "Tables or views to exclude, read from a file.")
 	flag.Var(&include, "include-file", "Tables or views to include, read from a file.")
@@ -38,13 +46,27 @@ func run(args []string) error {
 		return errors.New("error: provide only one of --include or --exclude")
 	}
 
+	// validate user provided template now.
+	var userTemplate *template.Template
+	if *templateFile != "" {
+		var err error
+		if userTemplate, err = newTemplateFromFile(*templateFile); err != nil {
+			return err
+		}
+	}
+
+	// validate section: 1 <= section <= 6
+	if *section < 1 || *section > 6 {
+		*section = 1
+	}
+
 	// Read tables from the specified source
 	var tables Tables
 	switch {
 	case *sqlite:
 		db, err := sqlx.Open("sqlite3", flag.Arg(0))
 		if err != nil {
-			break
+			return err
 		}
 		defer db.Close()
 
@@ -52,6 +74,21 @@ func run(args []string) error {
 		if err != nil {
 			return err
 		}
+
+	case *postgres:
+		db, err := sqlx.Open("pgx", os.Getenv("PGDATABASE_URL"))
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+
+		tables, err = parsePostgres(db)
+		if err != nil {
+			return err
+		}
+
+	default:
+		return errors.New("error: provide -sqlite or -postgres")
 	}
 
 	// Filter tables
@@ -65,8 +102,20 @@ func run(args []string) error {
 		}
 		return nil
 
+	case userTemplate != nil:
+		if err := userTemplate.Execute(os.Stdout, tables); err != nil {
+			return err
+		}
+		return nil
+
+	case *mdOutput:
+		return md(os.Stdout, tables, *section)
+
+	case *htmlOutput:
+		return html(os.Stdout, tables, *section)
+
 	default:
-		return graph(os.Stdout, tables, *includeFK)
+		return graph(os.Stdout, tables, *includeFK, *truncateDot)
 	}
 }
 
