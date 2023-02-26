@@ -33,16 +33,15 @@ func d2(w io.Writer, tables Tables) error {
 			}
 
 			if !c.NotNull {
-				bufW.WriteString(" (nullable)")
+				bufW.WriteString(" (N)")
 			}
 
 			if c.PrimaryKey {
 				bufW.WriteString(" { constraint: primary_key }")
-			}
-
-			if i, _ := t.Refers(c.Name); i >= 0 {
-				bufW.WriteString(" { constraint: foreign_key }")
-
+			} else {
+				if i, _ := t.Refers(c.Name); i >= 0 {
+					bufW.WriteString(" { constraint: foreign_key }")
+				}
 			}
 
 			bufW.WriteString("\n")
