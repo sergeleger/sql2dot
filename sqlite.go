@@ -35,7 +35,7 @@ type sqliteForeignKey struct {
 
 func parseSqlite(db *sqlx.DB) (Tables, error) {
 	var sqliteTables []sqliteTable
-	err := db.Select(&sqliteTables, `select type, name from sqlite_master where type != "index"`)
+	err := db.Select(&sqliteTables, `select type, name from sqlite_master where type="table" or type="view"`)
 	if err != nil {
 		return nil, fmt.Errorf("error: getting list of tables: %w", err)
 	}
