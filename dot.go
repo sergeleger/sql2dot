@@ -6,8 +6,8 @@ import (
 	"html/template"
 	"io"
 	"os"
-
-	"golang.org/x/exp/slices"
+	"slices"
+	"strings"
 )
 
 func newTemplate(source string) (*template.Template, error) {
@@ -61,8 +61,8 @@ func graph(w io.Writer, tables Tables, includeFK bool, truncate int) error {
 		return err
 	}
 
-	slices.SortFunc(tables, func(a, b Table) bool {
-		return a.Name < b.Name
+	slices.SortFunc(tables, func(a, b Table) int {
+		return strings.Compare(a.Name, b.Name)
 	})
 
 	// Draw tables and columns

@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-
-	"golang.org/x/exp/slices"
+	"slices"
+	"strings"
 )
 
 func d2(w io.Writer, tables Tables) error {
-	slices.SortFunc(tables, func(a, b Table) bool {
-		return a.Name < b.Name
+	slices.SortFunc(tables, func(a, b Table) int {
+		return strings.Compare(a.Name, b.Name)
 	})
 
 	bufW := bufio.NewWriter(w)
